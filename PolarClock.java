@@ -70,7 +70,7 @@ public class PolarClock extends JComponent implements Runnable {
 	
 	private static final int FADE_TICKS=(int)(FADE_TIME_SECONDS*TICKS);
 	
-	protected DecimalFormat tflz, tf;
+	protected DecimalFormat leadingZeros, tf;
 	protected int[] ringFadeTicks=new int[MAX_RINGS];
 	protected int[] ringLastValue=new int[MAX_RINGS];
 	protected boolean done = false;
@@ -78,7 +78,7 @@ public class PolarClock extends JComponent implements Runnable {
 	public PolarClock() {
 		new Thread(this).start();
 		tf = new DecimalFormat("#0");
-		tflz = new DecimalFormat("00");
+		leadingZeros = new DecimalFormat("00");
 	}
 	
 	public void stop() {
@@ -119,9 +119,9 @@ public class PolarClock extends JComponent implements Runnable {
 			otherHoursFormat=longHour_s;
 		}
 		sb.append(':');
-		sb.append(tflz.format(minutes));
+		sb.append(leadingZeros.format(minutes));
 		sb.append(':');
-		sb.append(tflz.format(seconds));
+		sb.append(leadingZeros.format(seconds));
 		String s = sb.toString();
 
 		if (this.font==null) {
