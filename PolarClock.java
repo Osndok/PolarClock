@@ -53,7 +53,7 @@ public class PolarClock extends JComponent implements Runnable {
 	private static final boolean pacman=false;     //All arcs point the same direction
 
 	private static final boolean jagged=false;
-	private static final boolean workday=false;
+	private static final boolean workday=true;
 	private static final boolean smoothSeconds=false;
 	private static final boolean skipFirstTick=false;
 	private static final boolean drawAllTicks=false;
@@ -87,10 +87,17 @@ public class PolarClock extends JComponent implements Runnable {
 	
 	//The size as of last paint()
 	private Dimension size;
-	
+
+	private Calendar myCal       = Calendar.getInstance();
+	private Calendar utcCalendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+
 	/* paint() - get current time and draw (centered) in Component. */
 	public void paint(Graphics g) {
-		Calendar myCal = Calendar.getInstance();
+		//NB: calendars have internal dates
+		long now=System.currentTimeMillis();
+		myCal.setTimeInMillis(now);
+		utcCalendar.setTimeInMillis(now);
+
 		int hours=myCal.get(Calendar.HOUR_OF_DAY);
 		int shortHour=myCal.get(Calendar.HOUR);
 		int minutes=myCal.get(Calendar.MINUTE);
@@ -110,12 +117,15 @@ public class PolarClock extends JComponent implements Runnable {
 		} else {
 			shortHour_s=Integer.toString(shortHour);
 		}
+		String normalHoursFormat;
 		String otherHoursFormat;
 		if (military) {
 			sb.append(longHour_s);
+			normalHoursFormat=longHour_s;
 			otherHoursFormat=shortHour_s;
 		} else {
 			sb.append(shortHour_s);
+			normalHoursFormat=shortHour_s;
 			otherHoursFormat=longHour_s;
 		}
 		sb.append(':');
@@ -137,13 +147,7 @@ public class PolarClock extends JComponent implements Runnable {
 		boolean pm=shortHour<hours;
 		
 		resetRings();
-		
-		/* seconds biggest
-		drawRing(g, seconds, 60);
-		drawRing(g, minutes, 60);
-		drawRing(g, hours, 24);
-		 */
-		
+
 		int maxHours=24;
 
 		boolean workMode;
@@ -199,7 +203,7 @@ public class PolarClock extends JComponent implements Runnable {
 			}
 		}
 
-		if (true) {
+		if (!normalHoursFormat.equals(otherHoursFormat)) {
 			int y2=y-fm.getHeight();
 			outlinedString(g, otherHoursFormat, x, y2, Color.BLUE);
 		}
@@ -214,8 +218,6 @@ public class PolarClock extends JComponent implements Runnable {
 			g.setFont(font);
 		}
 	}
-
-	private Calendar utcCalendar=Calendar.getInstance(TimeZone.getTimeZone("UTC"));
 
 	private Font originalFont;
 	private Font font;
