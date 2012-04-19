@@ -54,6 +54,7 @@ public class PolarClock extends JComponent implements Runnable {
 
 	private static final boolean jagged=false;
 	private static final boolean workday=true;
+	private static final boolean showSeconds=false; // in the time format, will still show the seconds pie/ring
 	private static final boolean smoothSeconds=false;
 	private static final boolean skipFirstTick=false;
 	private static final boolean drawAllTicks=false;
@@ -130,8 +131,12 @@ public class PolarClock extends JComponent implements Runnable {
 		}
 		sb.append(':');
 		sb.append(leadingZeros.format(minutes));
-		sb.append(':');
-		sb.append(leadingZeros.format(seconds));
+
+		if (showSeconds) {
+			sb.append(':');
+			sb.append(leadingZeros.format(seconds));
+		}
+
 		String s = sb.toString();
 
 		if (this.font==null) {
