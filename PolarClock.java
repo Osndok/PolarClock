@@ -1,4 +1,5 @@
 
+import java.awt.Font;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -54,7 +55,9 @@ public class PolarClock extends JComponent implements Runnable {
 	private static final boolean smoothSeconds=false;
 	private static final boolean skipFirstTick=false;
 	private static final boolean drawAllTicks=false;
-	
+
+	private static final boolean floatingTime=false;
+
 	private static final int WORK_START = 8;    //8am
 	private static final int WORK_END   = 5+12; //5pm
 
@@ -93,15 +96,25 @@ public class PolarClock extends JComponent implements Runnable {
 		StringBuffer sb = new StringBuffer();
 		if (military)
 			sb.append(tf.format(hours));
-		else if (shortHour!=0)
-			sb.append(tf.format(shortHour));
-		else
+		else if (shortHour!=0) {
+			if (shortHour<10) {
+				sb.append("0"+tf.format(shortHour));
+			} else {
+				sb.append(tf.format(shortHour));
+			}
+		} else
 			sb.append(tf.format(12));
 		sb.append(':');
 		sb.append(tflz.format(minutes));
 		sb.append(':');
 		sb.append(tflz.format(seconds));
 		String s = sb.toString();
+
+		if (this.font==null) {
+			font=getFont().deriveFont((float)31);
+			setFont(font);
+		}
+
 		FontMetrics fm = getFontMetrics(getFont());
 		size=getSize();
 		int textX = (size.width - fm.stringWidth(s)) / 2;
@@ -147,10 +160,30 @@ public class PolarClock extends JComponent implements Runnable {
 		//Draw the time about where the hour would be
 		int x=(size.width-fm.stringWidth(s))/2+(int)(Math.cos(hourRadians)*size.width/4);
 		int y=size.height/2+(int)(Math.sin(hourRadians)*size.height/4);
+		
+		if (!floatingTime) {
+			x=2;
+			y=size.height/2+10;//+fm.getHeight()/2;
+		}
+		outlinedString(g, s, x, y);
+	}
+
+	private Font font;
+
+	private void outlinedString(Graphics g, String s, int x, int y) {
+		g.setColor(Color.WHITE);
+		g.drawString(s, x-1, y  );
+		g.drawString(s, x-1, y-1);
+		g.drawString(s, x  , y-1);
+		g.drawString(s, x+1, y+1);
+		g.drawString(s, x+1, y  );
+		g.drawString(s, x  , y+1);
+		g.drawString(s, x-1, y+1);
+		g.drawString(s, x+1, y-1);
 		g.setColor(Color.BLACK);
 		g.drawString(s, x, y);
 	}
-	
+
 	private int tickCount=-1;
 	private int ringNumber;
 	private int lastRingsEnd;
@@ -211,14 +244,14 @@ public class PolarClock extends JComponent implements Runnable {
 				g.fillArc(x, y, w, h, start, degrees);
 				g.setColor(normal);
 				g.fillArc(x, y, w, h, start, ringLastValue[n]);
-				//g.setColor(Color.WHITE);
-				//g.fillArc(x+RING_WIDTH, y+RING_WIDTH, w-2*RING_WIDTH, h-2*RING_WIDTH, start, ringLastValue[n]);
+				g.setColor(Color.WHITE);
+				g.fillArc(x+RING_WIDTH-GUTTER, y+RING_WIDTH-GUTTER, w-2*RING_WIDTH+2*GUTTER, h-2*RING_WIDTH+2*GUTTER, start, ringLastValue[n]);
 			} else {
 				Color newColor=new Color(normal.getRed(), normal.getGreen(), normal.getBlue(), alpha);
 				g.setColor(newColor);
 				g.fillArc(x, y, w, h, start, ringLastValue[n]);
-				//g.setColor(Color.WHITE);
-				//g.fillArc(x+RING_WIDTH, y+RING_WIDTH, w-2*RING_WIDTH, h-2*RING_WIDTH, start, ringLastValue[n]);
+				g.setColor(Color.WHITE);
+				g.fillArc(x+RING_WIDTH-GUTTER, y+RING_WIDTH-GUTTER, w-2*RING_WIDTH+2*GUTTER, h-2*RING_WIDTH+2*GUTTER, start, ringLastValue[n]);
 			}
 			fade--;
 			if (fade==0) {
