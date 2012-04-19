@@ -111,8 +111,10 @@ public class PolarClock extends JComponent implements Runnable {
 		String s = sb.toString();
 
 		if (this.font==null) {
-			font=getFont().deriveFont((float)31);
+			originalFont=getFont();
+			font=originalFont.deriveFont((float)31);
 			setFont(font);
+			g.setFont(font);
 		}
 
 		FontMetrics fm = getFontMetrics(getFont());
@@ -129,10 +131,15 @@ public class PolarClock extends JComponent implements Runnable {
 		 */
 		
 		int maxHours=24;
-		
+
+		boolean workMode;
+
 		if (workday && hours>=WORK_START && hours<=WORK_END) {
 			hours-=WORK_START;
 			maxHours=WORK_END-WORK_START;
+			workMode=true;
+		} else {
+			workMode=false;
 		}
 		
 		// hour biggest
@@ -165,12 +172,36 @@ public class PolarClock extends JComponent implements Runnable {
 			x=2;
 			y=size.height/2+10;//+fm.getHeight()/2;
 		}
-		outlinedString(g, s, x, y);
+		outlinedString(g, s, x, y, Color.BLACK);
+
+		//!!!: Hack, and wrong. Demo use only.
+		int zuluHours=(hours+5)%24;
+
+		if (true) {
+			y+=fm.getHeight();
+			if (zuluHours<10) {
+				outlinedString(g, "0"+Integer.toString(zuluHours), x, y, Color.MAGENTA);
+			} else {
+				outlinedString(g, Integer.toString(zuluHours), x, y, Color.MAGENTA);
+			}
+		}
+
+		if (workMode) {
+			if (this.workFont==null) {
+				//workFont=originalFont.deriveFont((float)14);
+				workFont=originalFont;
+			}
+			g.setFont(workFont);
+			outlinedString(g, "Work Mode", 3, 15, Color.BLACK);
+			g.setFont(font);
+		}
 	}
 
+	private Font originalFont;
 	private Font font;
+	private Font workFont;
 
-	private void outlinedString(Graphics g, String s, int x, int y) {
+	private void outlinedString(Graphics g, String s, int x, int y, Color c) {
 		g.setColor(Color.WHITE);
 		g.drawString(s, x-1, y  );
 		g.drawString(s, x-1, y-1);
@@ -180,7 +211,7 @@ public class PolarClock extends JComponent implements Runnable {
 		g.drawString(s, x  , y+1);
 		g.drawString(s, x-1, y+1);
 		g.drawString(s, x+1, y-1);
-		g.setColor(Color.BLACK);
+		g.setColor(c);
 		g.drawString(s, x, y);
 	}
 
