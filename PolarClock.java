@@ -21,6 +21,8 @@ public class PolarClock extends JComponent implements Runnable {
 	
 	//in pixels, the width of the non-overlapping area of the rings/pie segments; radiuspixels-per-ring
 	private static final int RING_WIDTH=50;
+	private static final int GUTTER=5;
+
 	//the number of updates within one second (for animations); ticks-per-second
 	private static final int TICKS=20;
 	
@@ -45,19 +47,21 @@ public class PolarClock extends JComponent implements Runnable {
 	private static final int maxEasilyCountableWedges=2;
 	
 	private static final boolean military=false;
-	private static final boolean pacman=false;
+	private static final boolean pacman=false;     //All arcs point the same direction
+
 	private static final boolean jagged=false;
-	private static final boolean workday=true;
+	private static final boolean workday=false;
 	private static final boolean smoothSeconds=false;
 	private static final boolean skipFirstTick=false;
 	private static final boolean drawAllTicks=false;
 	
 	private static final int WORK_START = 8;    //8am
 	private static final int WORK_END   = 5+12; //5pm
-	
+
+	//For non-pacman, origin is on the right; e.g. sin(theta)
 	//-90 is facing right, 0 is facing up, 90 is facing left, etc...
-	private static final int PACMAN_OFFSET=-90;
-	//private static final int PACMAN_OFFSET=0;
+	//private static final int PACMAN_OFFSET=-90; //pacman
+	private static final int PACMAN_OFFSET=180; //time keeper
 	
 	private static final int FADE_TICKS=(int)(FADE_TIME_SECONDS*TICKS);
 	
@@ -143,6 +147,7 @@ public class PolarClock extends JComponent implements Runnable {
 		//Draw the time about where the hour would be
 		int x=(size.width-fm.stringWidth(s))/2+(int)(Math.cos(hourRadians)*size.width/4);
 		int y=size.height/2+(int)(Math.sin(hourRadians)*size.height/4);
+		g.setColor(Color.BLACK);
 		g.drawString(s, x, y);
 	}
 	
@@ -206,10 +211,14 @@ public class PolarClock extends JComponent implements Runnable {
 				g.fillArc(x, y, w, h, start, degrees);
 				g.setColor(normal);
 				g.fillArc(x, y, w, h, start, ringLastValue[n]);
+				//g.setColor(Color.WHITE);
+				//g.fillArc(x+RING_WIDTH, y+RING_WIDTH, w-2*RING_WIDTH, h-2*RING_WIDTH, start, ringLastValue[n]);
 			} else {
 				Color newColor=new Color(normal.getRed(), normal.getGreen(), normal.getBlue(), alpha);
 				g.setColor(newColor);
 				g.fillArc(x, y, w, h, start, ringLastValue[n]);
+				//g.setColor(Color.WHITE);
+				//g.fillArc(x+RING_WIDTH, y+RING_WIDTH, w-2*RING_WIDTH, h-2*RING_WIDTH, start, ringLastValue[n]);
 			}
 			fade--;
 			if (fade==0) {
@@ -227,6 +236,8 @@ public class PolarClock extends JComponent implements Runnable {
 		if (!fadeIn) {
 			g.setColor(ringColors[n]);
 			g.fillArc(x, y, w, h, start, degrees);
+			g.setColor(Color.WHITE);
+			g.fillArc(x+RING_WIDTH-GUTTER, y+RING_WIDTH-GUTTER, w-2*RING_WIDTH+2*GUTTER, h-2*RING_WIDTH+2*GUTTER, start, ringLastValue[n]);
 		}
 		
 		if (drawTicks) {
@@ -268,7 +279,8 @@ public class PolarClock extends JComponent implements Runnable {
 	
 	private void resetRings() {
 		ringNumber=0;
-		lastRingsEnd=90;
+		//lastRingsEnd=90;
+		lastRingsEnd=PACMAN_OFFSET;
 	}
 	
 	public Dimension getPreferredSize() {
