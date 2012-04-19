@@ -9,6 +9,8 @@ import java.awt.BorderLayout;
 import java.awt.RenderingHints;
 
 import java.util.Calendar;
+import java.util.TimeZone;
+
 import java.text.DecimalFormat;
 
 import javax.swing.JFrame;
@@ -174,8 +176,7 @@ public class PolarClock extends JComponent implements Runnable {
 		}
 		outlinedString(g, s, x, y, Color.BLACK);
 
-		//!!!: Hack, and wrong. Demo use only.
-		int zuluHours=(hours+5)%24;
+		int zuluHours=utcCalendar.get(Calendar.HOUR_OF_DAY);
 
 		if (true) {
 			y+=fm.getHeight();
@@ -196,6 +197,8 @@ public class PolarClock extends JComponent implements Runnable {
 			g.setFont(font);
 		}
 	}
+
+	private Calendar utcCalendar=Calendar.getInstance(TimeZone.getTimeZone("UTC"));
 
 	private Font originalFont;
 	private Font font;
