@@ -272,7 +272,17 @@ public class PolarClock extends JComponent implements Runnable {
 			g.setColor(Color.WHITE);
 			g.fillArc(x+RING_WIDTH-GUTTER, y+RING_WIDTH-GUTTER, w-2*RING_WIDTH+2*GUTTER, h-2*RING_WIDTH+2*GUTTER, start, ringLastValue[n]);
 		}
-		
+
+		//HACK
+		boolean notSecondsRing=drawTicks;
+
+		if (notSecondsRing) {
+			g.setColor(Color.BLUE);
+			g.fillArc(x, y, w, h, start+degrees, 2);
+			g.setColor(Color.WHITE);
+			g.fillArc(x+2*RING_WIDTH-GUTTER, y+2*RING_WIDTH-GUTTER, w-4*RING_WIDTH+2*GUTTER, h-4*RING_WIDTH+2*GUTTER, start, ringLastValue[n]);
+		}
+
 		if (drawTicks) {
 			double tickIncr=360.0/maximum;
 			g.setColor(tickColor);
