@@ -96,16 +96,28 @@ public class PolarClock extends JComponent implements Runnable {
 		int minutes=myCal.get(Calendar.MINUTE);
 		int seconds=myCal.get(Calendar.SECOND);
 		StringBuffer sb = new StringBuffer();
-		if (military)
-			sb.append(tf.format(hours));
-		else if (shortHour!=0) {
-			if (shortHour<10) {
-				sb.append("0"+tf.format(shortHour));
-			} else {
-				sb.append(tf.format(shortHour));
-			}
-		} else
-			sb.append(tf.format(12));
+		String longHour_s;
+		if (hours<10) {
+			longHour_s="0"+Integer.toString(hours);
+		} else {
+			longHour_s=Integer.toString(hours);
+		}
+		String shortHour_s;
+		if (shortHour==00) {
+			shortHour_s="12";
+		} else if (shortHour<10) {
+			shortHour_s="0"+Integer.toString(shortHour);
+		} else {
+			shortHour_s=Integer.toString(shortHour);
+		}
+		String otherHoursFormat;
+		if (military) {
+			sb.append(longHour_s);
+			otherHoursFormat=shortHour_s;
+		} else {
+			sb.append(shortHour_s);
+			otherHoursFormat=longHour_s;
+		}
 		sb.append(':');
 		sb.append(tflz.format(minutes));
 		sb.append(':');
@@ -179,12 +191,17 @@ public class PolarClock extends JComponent implements Runnable {
 		int zuluHours=utcCalendar.get(Calendar.HOUR_OF_DAY);
 
 		if (true) {
-			y+=fm.getHeight();
+			int y2=y+fm.getHeight();
 			if (zuluHours<10) {
-				outlinedString(g, "0"+Integer.toString(zuluHours), x, y, Color.MAGENTA);
+				outlinedString(g, "0"+Integer.toString(zuluHours), x, y2, Color.MAGENTA);
 			} else {
-				outlinedString(g, Integer.toString(zuluHours), x, y, Color.MAGENTA);
+				outlinedString(g, Integer.toString(zuluHours), x, y2, Color.MAGENTA);
 			}
+		}
+
+		if (true) {
+			int y2=y-fm.getHeight();
+			outlinedString(g, otherHoursFormat, x, y2, Color.BLUE);
 		}
 
 		if (workMode) {
