@@ -163,7 +163,11 @@ public class PolarClock extends JComponent implements Runnable {
 		drawRing(g, hours, maxHours, true);
 		int hourDegrees=lastRingsEnd;
 		drawRing(g, minutes, 60, true);
-		drawRing(g, seconds, 60, false);
+		
+		if (showSeconds)
+		{
+			drawRing(g, seconds, 60, false);
+		}
 		
 		//int hourDegrees=lastRingsEnd;
 		//Subtract five degrees
