@@ -193,24 +193,24 @@ public class PolarClock extends JComponent implements Runnable {
 		
 		if (!floatingTime) {
 			x=2;
-			y=size.height/2+10;//+fm.getHeight()/2;
+			y=size.height/2-3;//+10;//+fm.getHeight()/2;
 		}
-		outlinedString(g, s, x, y, Color.BLACK);
+		outlinedString(g, s, x, y, Color.BLUE);
 
 		int zuluHours=utcCalendar.get(Calendar.HOUR_OF_DAY);
 
 		if (true) {
 			int y2=y+fm.getHeight();
 			if (zuluHours<10) {
-				outlinedString(g, "0"+Integer.toString(zuluHours), x, y2, Color.MAGENTA);
+				outlinedString(g, "0"+Integer.toString(zuluHours)+'z', x, y2, Color.MAGENTA);
 			} else {
-				outlinedString(g, Integer.toString(zuluHours), x, y2, Color.MAGENTA);
+				outlinedString(g, Integer.toString(zuluHours)+'z', x, y2, Color.MAGENTA);
 			}
 		}
 
 		if (!normalHoursFormat.equals(otherHoursFormat)) {
 			int y2=y-fm.getHeight();
-			outlinedString(g, otherHoursFormat, x, y2, Color.BLUE);
+			outlinedString(g, otherHoursFormat, x, y2, Color.GREEN);
 		}
 
 		if (workMode) {
