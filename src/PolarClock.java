@@ -28,9 +28,7 @@ public class PolarClock extends JComponent implements Runnable {
 
 	//the number of updates within one second (for animations); ticks-per-second
 	private static final int TICKS=20;
-	
-	private static final double FADE_TIME_SECONDS=2.0;
-	
+
 	private static final int MAX_RINGS=10;
 	
 	//Dark on the outside
@@ -55,7 +53,6 @@ public class PolarClock extends JComponent implements Runnable {
 	private static final boolean jagged=false;
 	private static final boolean workday=true;
 	private static final boolean showSeconds=false; // in the time format, will still show the seconds pie/ring
-	private static final boolean smoothSeconds=false;
 	private static final boolean skipFirstTick=false;
 	private static final boolean drawAllTicks=false;
 
@@ -69,10 +66,7 @@ public class PolarClock extends JComponent implements Runnable {
 	//private static final int PACMAN_OFFSET=-90; //pacman
 	private static final int PACMAN_OFFSET=180; //time keeper
 	
-	private static final int FADE_TICKS=(int)(FADE_TIME_SECONDS*TICKS);
-	
 	protected DecimalFormat leadingZeros, tf;
-	protected int[] ringFadeTicks=new int[MAX_RINGS];
 	protected int[] ringLastValue=new int[MAX_RINGS];
 	protected boolean done = false;
 	
@@ -166,21 +160,10 @@ public class PolarClock extends JComponent implements Runnable {
 		}
 		
 		// hour biggest
-		drawRing(g, hours, maxHours, true, true);
+		drawRing(g, hours, maxHours, true);
 		int hourDegrees=lastRingsEnd;
-		drawRing(g, minutes, 60, true, true);
-		if (smoothSeconds) {
-			int trueButRoughTicks=seconds*TICKS;
-			tickCount++;
-			//the first tickCount will be wrong
-			if (tickCount<trueButRoughTicks)
-				tickCount=trueButRoughTicks;
-			if (tickCount>trueButRoughTicks+TICKS)
-				tickCount=trueButRoughTicks+TICKS;
-			drawRing(g, tickCount, 60*TICKS, false, false);
-		} else {
-			drawRing(g, seconds, 60, false, false);
-		}
+		drawRing(g, minutes, 60, true);
+		drawRing(g, seconds, 60, false);
 		
 		//int hourDegrees=lastRingsEnd;
 		//Subtract five degrees
@@ -246,7 +229,7 @@ public class PolarClock extends JComponent implements Runnable {
 	private int ringNumber;
 	private int lastRingsEnd;
 	
-	private void drawRing(Graphics g, int passed, int maximum, boolean fadeAllChange, boolean drawTicks) {
+	private void drawRing(Graphics g, int passed, int maximum, boolean drawTicks) {
 		if (!jagged) {
 			((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING,
 											 RenderingHints.VALUE_ANTIALIAS_ON);
@@ -271,60 +254,16 @@ public class PolarClock extends JComponent implements Runnable {
 			lastRingsEnd = start-degrees;
 			degrees*=-1;
 		}
-		
-		//if we are in a fade, draw the last value proportional to the fade time
-		boolean fadeIn=false;
-		int fade=ringFadeTicks[n];
-		if (fade==0 && ( ringLastValue[n]<degrees || (fadeAllChange && ringLastValue[n]!=degrees))) {
-			//we are not fading and the value has jumped backwards... trigger a fade starting this frame
-			fade=ringFadeTicks[n]=FADE_TICKS;
-		}
-		if (fade>0) {
-			if (fade>FADE_TICKS || fade<0) {
-				System.err.println("Argh... "+n+" / "+fade);
-				fade=ringFadeTicks[n]=FADE_TICKS;
-			}
-			//degrees are negative so this is counter-intuitive
-			fadeIn=fadeAllChange && ringLastValue[n]>degrees;
-			double opacity=(1.0*fade/FADE_TICKS);
-			int alpha=(int)(opacity*255);
-			if (alpha<0)
-				alpha=0;
-			if (alpha>255)
-				alpha=255;
-			Color normal=ringColors[n];
-			//fadeIn means we are transitioning to the new value, so the opaque one is the new value (degrees), the old one is solid
-			//!fadeIn means that we have wrapped, so we linger the old (full) value.
-			//System.err.println("Fade... "+n+"/"+fadeIn+"/"+fade+"/"+degrees+"/"+ringLastValue[n]);
-			if (fadeIn) {
-				Color newColor=new Color(normal.getRed(), normal.getGreen(), normal.getBlue(), 255-alpha);
-				g.setColor(newColor);
-				g.fillArc(x, y, w, h, start, degrees);
-				g.setColor(normal);
-				g.fillArc(x, y, w, h, start, ringLastValue[n]);
-				g.setColor(Color.WHITE);
-				g.fillArc(x+RING_WIDTH-GUTTER, y+RING_WIDTH-GUTTER, w-2*RING_WIDTH+2*GUTTER, h-2*RING_WIDTH+2*GUTTER, start, ringLastValue[n]);
-			} else {
-				Color newColor=new Color(normal.getRed(), normal.getGreen(), normal.getBlue(), alpha);
-				g.setColor(newColor);
-				g.fillArc(x, y, w, h, start, ringLastValue[n]);
-				g.setColor(Color.WHITE);
-				g.fillArc(x+RING_WIDTH-GUTTER, y+RING_WIDTH-GUTTER, w-2*RING_WIDTH+2*GUTTER, h-2*RING_WIDTH+2*GUTTER, start, ringLastValue[n]);
-			}
-			fade--;
-			if (fade==0) {
-				//we have finished the fade, don't start a new one immediately
-				ringLastValue[n]=degrees;
-			}
-			ringFadeTicks[n]=fade;
-		} else {
+
+
+		{
 			//garunteed that (ringLastValue[n]<degrees)
 			//that
 			//remember the last value
 			ringLastValue[n]=degrees;
 		}
-		
-		if (!fadeIn) {
+
+		{
 			g.setColor(ringColors[n]);
 			g.fillArc(x, y, w, h, start, degrees);
 			g.setColor(Color.WHITE);
@@ -391,40 +330,17 @@ public class PolarClock extends JComponent implements Runnable {
 	public Dimension getMinimumSize() {
 		return new Dimension(50, 10);
 	}
-	
-	private boolean doingAnimation() {
-		for (int i=ringFadeTicks.length-1; i>=0; i--) {
-			if (ringFadeTicks[i]!=0) {
-				return true;
-			}
-		}
-		return false;
-	}
 
 	public void run() {
 		int longDelay=1000;
 		int shortDelay=1000/TICKS;
-		if (smoothSeconds) {
-			//always use the short delay
-			while (!done) {
-				PolarClock.this.repaint(); // request a redraw
-				try {
-					Thread.sleep(shortDelay);
-				} catch (InterruptedException e) { /* do nothing */
-				}
-			}
-		} else {
+		{
 			//only use the short delay during animation times
 			while (!done) {
 				PolarClock.this.repaint(); // request a redraw
 				try {
-					if (doingAnimation()) {
-						//System.out.print("Quick, ");
-						Thread.sleep(shortDelay);
-					} else {
-						//System.out.println("Slow...");
-						Thread.sleep(longDelay);
-					}
+					//System.out.println("Slow...");
+					Thread.sleep(longDelay);
 				} catch (InterruptedException e) { /* do nothing */
 				}
 			}
