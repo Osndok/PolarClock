@@ -301,7 +301,7 @@ public class PolarClock extends JComponent implements Runnable {
 			g.fillArc(x, y, w, h, start, degrees);
 		}
 
-		if (fractionalExtension > 0 && flutter)
+		if (fractionalExtension > 0 /*&& flutter*/)
 		{
 			int extraDegrees=(int)(degreesPerWedge * fractionalExtension);
 			//System.err.println(extraDegrees);
