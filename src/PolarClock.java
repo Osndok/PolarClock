@@ -160,6 +160,7 @@ public class PolarClock extends JComponent implements Runnable {
 		}
 		
 		// hour biggest
+		fractionalExtension=minutes/60.0;
 		drawRing(g, hours, maxHours, true);
 		int hourDegrees=lastRingsEnd;
 		drawRing(g, minutes, 60, true);
@@ -232,9 +233,12 @@ public class PolarClock extends JComponent implements Runnable {
 	private int tickCount=-1;
 	private int ringNumber;
 	private int lastRingsEnd;
+	private double fractionalExtension;
 	
-	private void drawRing(Graphics g, int passed, int maximum, boolean drawTicks) {
-		if (!jagged) {
+	private void drawRing(Graphics g, int passed, int maximum, boolean drawTicks)
+	{
+		if (!jagged)
+		{
 			((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING,
 											 RenderingHints.VALUE_ANTIALIAS_ON);
 		}
@@ -245,7 +249,9 @@ public class PolarClock extends JComponent implements Runnable {
 		int y=RING_WIDTH*n;
 		int w=size.width-2*RING_WIDTH*n;
 		int h=size.height-2*RING_WIDTH*n;
-		int degrees = 360 * passed / maximum;
+		double degreesPerWedge = 360/maximum;
+		int degrees = (int)(degreesPerWedge * passed);
+		
 		int start;
 		boolean clearCenter=true;
 		if (pacman) {
@@ -268,8 +274,10 @@ public class PolarClock extends JComponent implements Runnable {
 		}
 
 		{
+			// Draw the ring that we want (but an 'arc' over-draws)
 			g.setColor(ringColors[n]);
 			g.fillArc(x, y, w, h, start, degrees);
+			// Erase the 'inside' of the arc with white, making it a ring
 			g.setColor(Color.WHITE);
 			g.fillArc(x+RING_WIDTH-GUTTER, y+RING_WIDTH-GUTTER, w-2*RING_WIDTH+2*GUTTER, h-2*RING_WIDTH+2*GUTTER, start, ringLastValue[n]);
 		}
@@ -277,9 +285,15 @@ public class PolarClock extends JComponent implements Runnable {
 		//HACK
 		boolean notSecondsRing=drawTicks;
 
-		if (notSecondsRing) {
-			g.setColor(Color.BLUE);
-			g.fillArc(x, y, w, h, start+degrees, 2);
+		//if (notSecondsRing)
+		if (fractionalExtension > 0)
+		{
+			int extraDegrees=(int)(degreesPerWedge * fractionalExtension);
+			//System.err.println(extraDegrees);
+			g.setColor(Color.LIGHT_GRAY);
+			g.fillArc(x, y, w, h, start+degrees, extraDegrees);
+			ringLastValue[n]+=extraDegrees;
+
 			g.setColor(Color.WHITE);
 			g.fillArc(x+2*RING_WIDTH-GUTTER, y+2*RING_WIDTH-GUTTER, w-4*RING_WIDTH+2*GUTTER, h-4*RING_WIDTH+2*GUTTER, start, ringLastValue[n]);
 		}
@@ -315,6 +329,7 @@ public class PolarClock extends JComponent implements Runnable {
 		}
 		
 		ringNumber++;
+		fractionalExtension=0;
 	}
 	
 	private void drawTick(Graphics g, int x, int y, int w, int h, int degrees) {
@@ -325,6 +340,7 @@ public class PolarClock extends JComponent implements Runnable {
 		ringNumber=0;
 		//lastRingsEnd=90;
 		lastRingsEnd=PACMAN_OFFSET;
+		fractionalExtension=0;
 	}
 	
 	public Dimension getPreferredSize() {
