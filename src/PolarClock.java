@@ -37,8 +37,16 @@ public class PolarClock extends JComponent implements Runnable {
 		Color.DARK_GRAY,
 		Color.LIGHT_GRAY,
 	};
-	
-	private static final Color tickColor = new Color(128, 128, 128, 40);
+
+	//private static final
+	//Color tickColorOld = new Color(128, 128, 128, 40);
+
+	private static final
+	Color tickColorLight=Color.WHITE;
+
+	private static final
+	Color tickColorDark=Color.BLACK;
+
 	//the number of adjacent wedges which do not need to be seperated by tick marks
 	//conventional clocks use 5; so the default should be a multiple of 5;
 	private static final double startingMultiplier=5;
@@ -53,8 +61,6 @@ public class PolarClock extends JComponent implements Runnable {
 	private static final boolean jagged=false;
 	private static final boolean workday=true;
 	private static final boolean showSeconds=false; // in the time format, will still show the seconds pie/ring
-	private static final boolean skipFirstTick=false;
-	private static final boolean drawAllTicks=false;
 
 	private static final boolean floatingTime=false;
 
@@ -277,46 +283,42 @@ public class PolarClock extends JComponent implements Runnable {
 			// Draw the ring that we want (but an 'arc' over-draws)
 			g.setColor(ringColors[n]);
 			g.fillArc(x, y, w, h, start, degrees);
-			// Erase the 'inside' of the arc with white, making it a ring
-			g.setColor(Color.WHITE);
-			g.fillArc(x+RING_WIDTH-GUTTER, y+RING_WIDTH-GUTTER, w-2*RING_WIDTH+2*GUTTER, h-2*RING_WIDTH+2*GUTTER, start, ringLastValue[n]);
 		}
 
-		//HACK
-		boolean notSecondsRing=drawTicks;
-
-		//if (notSecondsRing)
 		if (fractionalExtension > 0)
 		{
 			int extraDegrees=(int)(degreesPerWedge * fractionalExtension);
 			//System.err.println(extraDegrees);
 			g.setColor(Color.LIGHT_GRAY);
-			g.fillArc(x, y, w, h, start+degrees, extraDegrees);
-			ringLastValue[n]+=extraDegrees;
+			g.fillArc(x, y, w, h, start+degrees, -extraDegrees);
+			ringLastValue[n]-=extraDegrees;
 
 			g.setColor(Color.WHITE);
 			g.fillArc(x+2*RING_WIDTH-GUTTER, y+2*RING_WIDTH-GUTTER, w-4*RING_WIDTH+2*GUTTER, h-4*RING_WIDTH+2*GUTTER, start, ringLastValue[n]);
 		}
 
-		if (drawTicks) {
+		if (drawTicks)
+		{
+			final
 			double tickIncr=360.0/maximum;
-			g.setColor(tickColor);
-			if (tickIncr>1.0) {
-				double max;
-				if (drawAllTicks)
-					max=359.99;
-				else
-					max=(-degrees);
+
+			//g.setColor(tickColorOld);
+			if (tickIncr>1.0)
+			{
 				int numDrawn=0;
-				//Draw every tick mark once; skip the first (looks more uniform)
-				for (double i=(skipFirstTick?tickIncr:0); i<max; i=i+tickIncr) {
+
+				for (double i=0; i<360.0; i+=tickIncr)
+				{
+					g.setColor(!landsOnRing(i, start, degrees) ? tickColorLight : tickColorDark);
+					g.setColor(Color.GRAY);
 					drawTick(g, x, y, w, h, (int)(start-i));
 					numDrawn++;
 				}
-				//Redraw/embolden ruler-function marks if it might help
+				/*Redraw/embolden ruler-function marks if it might help
 				//If not drawing all the marks, this algorithim has the odd (but semi-natural) side effect of making more/bolder tick marks as required.
 				double lastIncrementMultiplier=startingMultiplier;
-				while (numDrawn>maxEasilyCountableWedges) {
+				while (numDrawn>maxEasilyCountableWedges)
+				{
 					numDrawn=0;
 					double rulerIncr=(tickIncr*lastIncrementMultiplier);
 					for (double i=(skipFirstTick?rulerIncr:0); i<max; i=i+rulerIncr) {
@@ -325,14 +327,38 @@ public class PolarClock extends JComponent implements Runnable {
 					}
 					lastIncrementMultiplier*=2;
 				}
+				*/
 			}
 		}
+		
+		// Erase the 'inside' of the arc with white, making it a ring
+		g.setColor(Color.WHITE);
+		//g.fillArc(x+RING_WIDTH-GUTTER, y+RING_WIDTH-GUTTER, w-2*RING_WIDTH+2*GUTTER, h-2*RING_WIDTH+2*GUTTER, start, ringLastValue[n]);
+		g.fillArc(x+RING_WIDTH-GUTTER, y+RING_WIDTH-GUTTER, w-2*RING_WIDTH+2*GUTTER, h-2*RING_WIDTH+2*GUTTER, 0, 360);
 		
 		ringNumber++;
 		fractionalExtension=0;
 	}
 	
-	private void drawTick(Graphics g, int x, int y, int w, int h, int degrees) {
+	private
+	boolean landsOnRing(double value, int startingOffset, int negativeIncrement)
+	{
+		int max=startingOffset+negativeIncrement;
+
+		if (max < startingOffset)
+		{
+			//It's inverted... on the 'outside'.
+			return value < startingOffset && value > max;
+		}
+		else
+		{
+			return value > startingOffset && value < max;
+		}
+	}
+
+	private
+	void drawTick(Graphics g, int x, int y, int w, int h, int degrees)
+	{
 		g.fillArc(x, y, w, h, degrees, -1);
 	}
 	
