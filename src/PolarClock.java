@@ -57,6 +57,7 @@ public class PolarClock extends JComponent implements Runnable {
 	
 	private static final boolean military=false;
 	private static final boolean pacman=false;     //All arcs point the same direction
+	private static final boolean clockish=true;
 
 	private static final boolean jagged=false;
 	private static final boolean workday=true;
@@ -70,7 +71,7 @@ public class PolarClock extends JComponent implements Runnable {
 	//For non-pacman, origin is on the right; e.g. sin(theta)
 	//-90 is facing right, 0 is facing up, 90 is facing left, etc...
 	//private static final int PACMAN_OFFSET=-90; //pacman
-	private static final int PACMAN_OFFSET=180; //time keeper
+	private static final int PACMAN_OFFSET=-90; //time keeper
 	
 	protected DecimalFormat leadingZeros, tf;
 	protected int[] ringLastValue=new int[MAX_RINGS];
@@ -92,6 +93,8 @@ public class PolarClock extends JComponent implements Runnable {
 	private Calendar myCal       = Calendar.getInstance();
 	private Calendar utcCalendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
 
+	boolean flutter;
+
 	/* paint() - get current time and draw (centered) in Component. */
 	public void paint(Graphics g) {
 		//NB: calendars have internal dates
@@ -103,6 +106,9 @@ public class PolarClock extends JComponent implements Runnable {
 		int shortHour=myCal.get(Calendar.HOUR);
 		int minutes=myCal.get(Calendar.MINUTE);
 		int seconds=myCal.get(Calendar.SECOND);
+		
+		flutter=(seconds%2==0);
+		
 		StringBuffer sb = new StringBuffer();
 		String longHour_s;
 		if (hours<10) {
@@ -260,11 +266,21 @@ public class PolarClock extends JComponent implements Runnable {
 		
 		int start;
 		boolean clearCenter=true;
-		if (pacman) {
+		if (clockish)
+		{
+			start=90;
+			degrees*=-1;
+		}
+		else
+		if (pacman)
+		{
 			//No matter where the last ring ended, center it at the bottom
-			start = -90 - degrees/2 + PACMAN_OFFSET;
+			start = - degrees/2;
 			clearCenter=false;
-		} else {
+			degrees*=-1;
+		}
+		else
+		{
 			start = lastRingsEnd;
 			//The negatives are to go the 'conventional' way of a clock
 			lastRingsEnd = start-degrees;
@@ -285,7 +301,7 @@ public class PolarClock extends JComponent implements Runnable {
 			g.fillArc(x, y, w, h, start, degrees);
 		}
 
-		if (fractionalExtension > 0)
+		if (fractionalExtension > 0 && flutter)
 		{
 			int extraDegrees=(int)(degreesPerWedge * fractionalExtension);
 			//System.err.println(extraDegrees);
@@ -293,8 +309,8 @@ public class PolarClock extends JComponent implements Runnable {
 			g.fillArc(x, y, w, h, start+degrees, -extraDegrees);
 			ringLastValue[n]-=extraDegrees;
 
-			g.setColor(Color.WHITE);
-			g.fillArc(x+2*RING_WIDTH-GUTTER, y+2*RING_WIDTH-GUTTER, w-4*RING_WIDTH+2*GUTTER, h-4*RING_WIDTH+2*GUTTER, start, ringLastValue[n]);
+			//g.setColor(Color.WHITE);
+			//g.fillArc(x+2*RING_WIDTH-GUTTER, y+2*RING_WIDTH-GUTTER, w-4*RING_WIDTH+2*GUTTER, h-4*RING_WIDTH+2*GUTTER, start, ringLastValue[n]);
 		}
 
 		if (drawTicks)
