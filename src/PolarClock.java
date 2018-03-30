@@ -320,7 +320,8 @@ public class PolarClock extends JComponent implements Runnable {
 			// If the tick marks are too wide out, make smaller quarter-marks within them.
 			if (maximum <= 12)
 			{
-				g.setColor(tickColorLight);
+				//g.setColor(tickColorLight);
+				g.setColor(Color.GRAY);
 				for (double i=0; i<360.0; i+=tickIncr/4)
 				{
 					drawTick(g, x, y, w, h, (int)(start-i));
@@ -332,8 +333,13 @@ public class PolarClock extends JComponent implements Runnable {
 				{
 					int rw=RING_WIDTH;
 					int hrw=RING_WIDTH/2;
+					int aa=2; // anti-alias confounder
+					
+					//We must erase the background, or else the quarter-tick marks 'in the air' will be far too long & distracting.
+					g.setColor(Color.WHITE);
+					g.fillArc(x+hrw+aa, y+hrw+aa, w-rw-2*aa, h-rw-2*aa, 0, 360);
 		
-					// Draw the ring that we want (over-draws as a 'wedge')
+					// REDRAW the ring segments that we just drew-over...
 					g.setColor(ringColors[n]);
 					g.fillArc(x+hrw, y+hrw, w-rw, h-rw, start, degrees);
 		
@@ -353,7 +359,15 @@ public class PolarClock extends JComponent implements Runnable {
 			{
 				int numDrawn=0;
 
-				g.setColor(Color.GRAY);
+				if (ringNumber==0)
+				{
+					g.setColor(Color.WHITE);
+				}
+				else
+				{
+					g.setColor(Color.GRAY);
+				}
+
 				for (double i=0; i<360.0; i+=tickIncr)
 				{
 					//g.setColor(!landsOnRing(i, start, degrees) ? tickColorLight : tickColorDark);
@@ -387,20 +401,33 @@ public class PolarClock extends JComponent implements Runnable {
 		fractionalExtension=0;
 	}
 	
+	private boolean kludge_lastWasOnRing;
+	
+	// TODO: BUG!!! This is totally wrong/broken! Probably best to rewrite/shift everything so that the clock-0 point is the degrees=0 point... then maybe I wouldn't get so confused.
 	private
 	boolean landsOnRing(double value, int startingOffset, int negativeIncrement)
 	{
 		int max=startingOffset+negativeIncrement;
 
+		final
+		boolean retval;
+
 		if (max < startingOffset)
 		{
 			//It's inverted... on the 'outside'.
-			return value < startingOffset && value > max;
+			retval=value < startingOffset && value > max;
 		}
 		else
 		{
-			return value > startingOffset && value < max;
+			retval=value > startingOffset && value < max;
 		}
+		
+		if (retval != kludge_lastWasOnRing)
+		{
+			System.err.println(String.format("DEBUG: landsOnRing(%f,%d,%d); max:%d -> %b", value, startingOffset, negativeIncrement, max, retval));
+			kludge_lastWasOnRing=retval;
+		}
+		return retval;
 	}
 
 	private
