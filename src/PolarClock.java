@@ -295,22 +295,21 @@ public class PolarClock extends JComponent implements Runnable {
 			ringLastValue[n]=degrees;
 		}
 
+		// Draw the ring (which at this point are circle-wedges). Minding that the
+		// 'fractionalExtension' (if present) is a different color.
 		{
-			// Draw the ring that we want (but an 'arc' over-draws)
+			// Draw the ring that we want (over-draws as a 'wedge')
 			g.setColor(ringColors[n]);
 			g.fillArc(x, y, w, h, start, degrees);
-		}
 
-		if (fractionalExtension > 0 /*&& flutter*/)
-		{
-			int extraDegrees=(int)(degreesPerWedge * fractionalExtension);
-			//System.err.println(extraDegrees);
-			g.setColor(Color.LIGHT_GRAY);
-			g.fillArc(x, y, w, h, start+degrees, -extraDegrees);
-			ringLastValue[n]-=extraDegrees;
-
-			//g.setColor(Color.WHITE);
-			//g.fillArc(x+2*RING_WIDTH-GUTTER, y+2*RING_WIDTH-GUTTER, w-4*RING_WIDTH+2*GUTTER, h-4*RING_WIDTH+2*GUTTER, start, ringLastValue[n]);
+			if (fractionalExtension > 0 /*&& flutter*/)
+			{
+				int extraDegrees=(int)(degreesPerWedge * fractionalExtension);
+				//System.err.println(extraDegrees);
+				g.setColor(Color.LIGHT_GRAY);
+				g.fillArc(x, y, w, h, start+degrees, -extraDegrees);
+				ringLastValue[n]-=extraDegrees;
+			}
 		}
 
 		if (drawTicks)
@@ -318,18 +317,50 @@ public class PolarClock extends JComponent implements Runnable {
 			final
 			double tickIncr=360.0/maximum;
 
+			// If the tick marks are too wide out, make smaller quarter-marks within them.
+			if (maximum <= 12)
+			{
+				g.setColor(tickColorLight);
+				for (double i=0; i<360.0; i+=tickIncr/4)
+				{
+					drawTick(g, x, y, w, h, (int)(start-i));
+				}
+				
+				// The way we get the 'partial tick' is just to overwrite these tick marks so they
+				// don't cut across the whole ring. So now we have to DRAW BOTH THE RINGS AGAIN...
+				//but this time shorter.
+				{
+					int rw=RING_WIDTH;
+					int hrw=RING_WIDTH/2;
+		
+					// Draw the ring that we want (over-draws as a 'wedge')
+					g.setColor(ringColors[n]);
+					g.fillArc(x+hrw, y+hrw, w-rw, h-rw, start, degrees);
+		
+					if (fractionalExtension > 0 /*&& flutter*/)
+					{
+						int extraDegrees=(int)(degreesPerWedge * fractionalExtension);
+						//System.err.println(extraDegrees);
+						g.setColor(Color.LIGHT_GRAY);
+						g.fillArc(x+hrw, y+hrw, w-rw, h-rw, start+degrees, -extraDegrees);
+						ringLastValue[n]-=extraDegrees;
+					}
+				}
+			}
+
 			//g.setColor(tickColorOld);
 			if (tickIncr>1.0)
 			{
 				int numDrawn=0;
 
+				g.setColor(Color.GRAY);
 				for (double i=0; i<360.0; i+=tickIncr)
 				{
-					g.setColor(!landsOnRing(i, start, degrees) ? tickColorLight : tickColorDark);
-					g.setColor(Color.GRAY);
+					//g.setColor(!landsOnRing(i, start, degrees) ? tickColorLight : tickColorDark);
 					drawTick(g, x, y, w, h, (int)(start-i));
 					numDrawn++;
 				}
+
 				/*Redraw/embolden ruler-function marks if it might help
 				//If not drawing all the marks, this algorithim has the odd (but semi-natural) side effect of making more/bolder tick marks as required.
 				double lastIncrementMultiplier=startingMultiplier;
@@ -347,7 +378,7 @@ public class PolarClock extends JComponent implements Runnable {
 			}
 		}
 		
-		// Erase the 'inside' of the arc with white, making it a ring
+		// Erase the 'inside' of the arc with white, making the circle a ring
 		g.setColor(Color.WHITE);
 		//g.fillArc(x+RING_WIDTH-GUTTER, y+RING_WIDTH-GUTTER, w-2*RING_WIDTH+2*GUTTER, h-2*RING_WIDTH+2*GUTTER, start, ringLastValue[n]);
 		g.fillArc(x+RING_WIDTH-GUTTER, y+RING_WIDTH-GUTTER, w-2*RING_WIDTH+2*GUTTER, h-2*RING_WIDTH+2*GUTTER, 0, 360);
@@ -377,7 +408,7 @@ public class PolarClock extends JComponent implements Runnable {
 	{
 		g.fillArc(x, y, w, h, degrees, -1);
 	}
-	
+
 	private void resetRings() {
 		ringNumber=0;
 		//lastRingsEnd=90;
