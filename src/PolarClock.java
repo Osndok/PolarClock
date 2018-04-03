@@ -295,6 +295,12 @@ public class PolarClock extends JComponent implements Runnable {
 			ringLastValue[n]=degrees;
 		}
 
+		//Start with a solid background
+		{
+			g.setColor(Color.WHITE);
+			g.fillArc(x, y, w, h, 0, 360);
+		}
+
 		// Draw the ring (which at this point are circle-wedges). Minding that the
 		// 'fractionalExtension' (if present) is a different color.
 		{
