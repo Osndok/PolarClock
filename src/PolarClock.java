@@ -365,14 +365,7 @@ public class PolarClock extends JComponent implements Runnable {
 			{
 				int numDrawn=0;
 
-				if (ringNumber==0)
-				{
-					g.setColor(Color.WHITE);
-				}
-				else
-				{
-					g.setColor(Color.GRAY);
-				}
+				g.setColor(Color.GRAY);
 
 				for (double i=0; i<360.0; i+=tickIncr)
 				{
