@@ -98,7 +98,9 @@ public class PolarClock extends JComponent implements Runnable {
 	/* paint() - get current time and draw (centered) in Component. */
 	public void paint(Graphics g) {
 		//NB: calendars have internal dates
+		final
 		long now=System.currentTimeMillis();
+
 		myCal.setTimeInMillis(now);
 		utcCalendar.setTimeInMillis(now);
 
@@ -213,14 +215,100 @@ public class PolarClock extends JComponent implements Runnable {
 			outlinedString(g, otherHoursFormat, x, y2, Color.GREEN);
 		}
 
-		if (workMode) {
+		if (workMode)
+		{
 			if (this.workFont==null) {
 				//workFont=originalFont.deriveFont((float)14);
 				workFont=originalFont;
 			}
 			g.setFont(workFont);
+			fm = getFontMetrics(workFont);
+
 			outlinedString(g, "Work Mode", 3, 15, Color.BLACK);
+			//System.err.println("now: "+now);
+
+			final
+			Calendar cal=myCal;
+
+			final
+			long startMillis;
+			{
+				cal.set(Calendar.HOUR_OF_DAY, WORK_START);
+				cal.set(Calendar.MINUTE, 0);
+				cal.set(Calendar.SECOND, 0);
+				cal.set(Calendar.MILLISECOND, 0);
+				startMillis=cal.getTimeInMillis();
+				//System.err.println("startMillis: "+startMillis);
+			}
+
+			final
+			long endMillis;
+			{
+				cal.set(Calendar.HOUR_OF_DAY, WORK_END);
+				cal.set(Calendar.MINUTE, 0);
+				cal.set(Calendar.SECOND, 0);
+				cal.set(Calendar.MILLISECOND, 0);
+				endMillis=cal.getTimeInMillis();
+				//System.err.println("endMillis: "+endMillis);
+			}
+
+			final
+			long totalWorkMillis=endMillis-startMillis;
+			//System.err.println("totalWorkMillis: "+totalWorkMillis);
+
+			final
+			long consumedWorkMillis=now-startMillis;
+			//System.err.println("consumedWorkMillis: "+consumedWorkMillis);
+
+			final
+			long workMillisRemaining=endMillis-now;
+
+			final
+			int workPercentComplete=(int)(100*consumedWorkMillis/totalWorkMillis);
+
+			s=String.format("%s%%", workPercentComplete);
+			{
+				int stringPixels=fm.stringWidth(s);
+				x=size.width/2-stringPixels/2;
+				y=(size.height/2);//-fm.getHeight());
+				outlinedString(g, s, x, y, Color.BLACK);
+			}
+
+			s=getDuration(workMillisRemaining);
+			{
+				int stringPixels=fm.stringWidth(s);
+				x=size.width/2-stringPixels/2;
+				y=(size.height/2+fm.getHeight());
+				outlinedString(g, s, x, y, Color.BLACK);
+			}
 			g.setFont(font);
+		}
+	}
+
+	private static
+	String getDuration(long millis)
+	{
+		long seconds=millis/1000;
+
+		if (seconds>=60)
+		{
+			long minutes=seconds/60;
+			seconds-=minutes*60;
+
+			if (minutes >= 60)
+			{
+				long hours=minutes/60;
+				minutes-=hours*60;
+				return String.format("%dh%dm", hours, minutes);
+			}
+			else
+			{
+				return String.format("%dm%ds", minutes, seconds);
+			}
+		}
+		else
+		{
+			return String.format("%ds", seconds);
 		}
 	}
 
