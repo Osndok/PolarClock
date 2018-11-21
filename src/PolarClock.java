@@ -165,11 +165,14 @@ public class PolarClock extends JComponent implements Runnable {
 
 		boolean workMode;
 
-		if (workday && hours>=WORK_START && hours<=WORK_END) {
+		if (workday && hours>=WORK_START && hours<WORK_END)
+		{
 			hours-=WORK_START;
 			maxHours=WORK_END-WORK_START;
 			workMode=true;
-		} else {
+		}
+		else
+		{
 			workMode=false;
 		}
 		
